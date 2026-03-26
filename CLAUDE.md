@@ -7,6 +7,7 @@ Research toolkit for analyzing go-to-market models.
 - `/research-init` — Set research context (run first)
 - `/research-social` — Social channel analysis
 - `/research-competitive` — Competitive landscape mapping
+- `/research-playground` — (Optional) Generate interactive HTML dashboard from completed reports
 
 ## Key files
 

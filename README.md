@@ -2,13 +2,14 @@
 
 Research any go-to-market model using Claude Code.
 
-Three AI-powered research skills that help you understand how companies go to market — drops, subscriptions, community-led growth, product-led growth, marketplaces, and more — and whether those models could work for your business.
+AI-powered research skills that help you understand how companies go to market — drops, subscriptions, community-led growth, product-led growth, marketplaces, and more — and whether those models could work for your business.
 
 ## What it does
 
 1. **`/research-init`** — Set your research context: which GTM model, which category, which companies inspire you
 2. **`/research-social`** — Map social channels to understand how the model works in practice: community dynamics, engagement patterns, consumer sentiment
 3. **`/research-competitive`** — Map operators of the model across categories, analyze their mechanics, identify what transfers to your category
+4. **`/research-playground`** *(optional)* — Generate an interactive HTML dashboard to explore your findings visually — filterable operators, sortable transferability matrices, clickable quotes
 
 ## Quick start
 
@@ -22,6 +23,7 @@ Open in Claude Code, then:
 1. Run `/research-init` and answer the questions about your GTM model and category
 2. Run `/research-social` for social channel analysis
 3. Run `/research-competitive` for competitive landscape mapping
+4. *(Optional)* Run `/research-playground` to generate an interactive dashboard
 
 Reports are saved to `reports/`.
 

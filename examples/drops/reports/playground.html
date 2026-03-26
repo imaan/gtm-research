@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drops Research Playground — Vincent Peach</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;
+  --text-muted:#8b949e;--accent:#f0883e;--accent-dim:rgba(240,136,62,.15);
+  --green:#3fb950;--green-dim:rgba(63,185,80,.15);
+  --yellow:#d29922;--yellow-dim:rgba(210,153,34,.15);
+  --red:#f85149;--red-dim:rgba(248,81,73,.15);
+  --gray:#484f58;--gray-dim:rgba(72,79,88,.25);
+  --radius:8px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.6;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+/* Tabs */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+.tab-btn{padding:12px 24px;background:none;border:none;color:var(--text-muted);font-size:14px;font-family:var(--font);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none;padding:24px;max-width:1100px;margin:0 auto}
+.tab-panel.active{display:block}
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{text-align:center;padding:24px 16px}
+.stat-card .num{font-size:36px;font-weight:700;color:var(--accent)}
+.stat-card .label{font-size:13px;color:var(--text-muted);margin-top:4px}
+/* Expandable */
+.expandable .exp-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.expandable .exp-header h3{margin:0;font-size:16px}
+.expandable .exp-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.expandable.open .exp-body{max-height:2000px}
+.exp-arrow{transition:transform .3s;font-size:12px;color:var(--text-muted)}
+.expandable.open .exp-arrow{transform:rotate(90deg)}
+/* Badges */
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;text-transform:uppercase}
+.badge-high{background:var(--green-dim);color:var(--green)}
+.badge-medium{background:var(--yellow-dim);color:var(--yellow)}
+.badge-later{background:var(--gray-dim);color:var(--text-muted)}
+.badge-no{background:var(--red-dim);color:var(--red)}
+.badge-tier1{background:var(--accent-dim);color:var(--accent)}
+.badge-tier2{background:var(--gray-dim);color:var(--text-muted)}
+/* Filter bar */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.filter-btn{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;font-family:var(--font);cursor:pointer;transition:all .2s}
+.filter-btn:hover{border-color:var(--accent);color:var(--text)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* Search */
+.search-box{width:100%;padding:10px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:var(--font);margin-bottom:16px}
+.search-box::placeholder{color:var(--text-muted)}
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px}
+.data-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;user-select:none;white-space:nowrap}
+.data-table th:hover{color:var(--accent)}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+.data-table tr:last-child td{border-bottom:none}
+.data-table .sort-arrow{margin-left:4px;font-size:10px}
+/* Section */
+h2.section-title{font-size:20px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h2.section-title .accent{color:var(--accent)}
+.section-desc{color:var(--text-muted);margin-bottom:20px;font-size:14px}
+/* Collapsible summary */
+.collapsible{cursor:pointer;display:flex;align-items:center;gap:8px}
+.collapsible-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.collapsible-body.open{max-height:3000px}
+/* Quote */
+.quote-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;cursor:pointer;transition:border-color .2s;position:relative}
+.quote-card:hover{border-color:var(--accent)}
+.quote-card blockquote{font-style:italic;margin-bottom:8px;line-height:1.5}
+.quote-card .source{font-size:12px;color:var(--text-muted)}
+.quote-card .copy-hint{position:absolute;top:8px;right:12px;font-size:11px;color:var(--text-muted)}
+.quote-card .copied-msg{position:absolute;top:8px;right:12px;font-size:11px;color:var(--green);opacity:0;transition:opacity .3s}
+.quote-card.just-copied .copied-msg{opacity:1}
+.quote-card.just-copied .copy-hint{opacity:0}
+/* Warning card */
+.warning-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px}
+.warning-card .title{font-weight:600;color:var(--red);margin-bottom:4px}
+.warning-card .desc{font-size:14px;color:var(--text-muted)}
+/* Gap card */
+.gap-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--yellow);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px}
+.gap-card .title{font-weight:600;color:var(--yellow);margin-bottom:4px}
+.gap-card .desc{font-size:14px;color:var(--text-muted)}
+/* Sentiment */
+.sentiment-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:14px}
+.sentiment-pos{color:var(--green)}
+.sentiment-neg{color:var(--red)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.dot-pos{background:var(--green)}
+.dot-neg{background:var(--red)}
+/* Segment card */
+.segment-card{border-top:3px solid var(--accent)}
+.segment-card h4{margin-bottom:8px}
+.segment-card ul{padding-left:20px;font-size:14px;color:var(--text-muted)}
+.segment-card ul li{margin-bottom:4px}
+/* Responsive */
+@media(max-width:640px){
+  .tab-btn{padding:10px 12px;font-size:12px}
+  .tab-panel{padding:16px}
+  .card-grid{grid-template-columns:1fr}
+}
+.hidden{display:none!important}
+.mt-24{margin-top:24px}
+.mb-8{margin-bottom:8px}
+.mb-16{margin-bottom:16px}
+.mb-24{margin-bottom:24px}
+.text-muted{color:var(--text-muted)}
+.text-sm{font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="overview">Overview</button>
+  <button class="tab-btn" data-tab="social">Social</button>
+  <button class="tab-btn" data-tab="competitive">Competitive</button>
+  <button class="tab-btn" data-tab="opportunities">Opportunities</button>
+  <button class="tab-btn" data-tab="quotes">Quotes</button>
+</div>
+
+<!-- ============ OVERVIEW ============ -->
+<div id="overview" class="tab-panel active">
+  <h2 class="section-title"><span class="accent">Drops Research</span> — Vincent Peach</h2>
+  <div class="card mb-24" style="border-left:3px solid var(--accent)">
+    <p><strong>Model:</strong> Drops / Scarcity &mdash; limited releases with artificial scarcity, products launched in limited quantities or for limited time windows.</p>
+    <p><strong>Category:</strong> Fine jewelry / luxury accessories</p>
+    <p><strong>Brand:</strong> Vincent Peach &mdash; modern pearl jewelry, Nashville-based, mid-to-high-end fine jewelry</p>
+    <p><strong>Stage:</strong> Exploration &mdash; gathering inspiration for whether/how drops could apply</p>
+    <p class="text-muted text-sm" style="margin-top:8px"><strong>Core Mechanic:</strong> Restricting supply to increase perceived value and drive urgency. VP's genuinely one-of-a-kind pieces are a stronger scarcity story than anything Supreme or Nike can manufacture.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card stat-card"><div class="num">8</div><div class="label">Channels Analyzed</div></div>
+    <div class="card stat-card"><div class="num">14</div><div class="label">Operators Profiled (8 T1 + 6 T2)</div></div>
+    <div class="card stat-card"><div class="num">5</div><div class="label">HIGH Priority Opportunities</div></div>
+    <div class="card stat-card"><div class="num">8+</div><div class="label">Notable Quotes Collected</div></div>
+  </div>
+
+  <div class="card mb-16">
+    <div class="collapsible" onclick="toggleCollapsible(this)">
+      <span class="exp-arrow">&#9654;</span>
+      <h3 style="margin:0;font-size:16px">Social Channel Analysis &mdash; Executive Summary</h3>
+    </div>
+    <div class="collapsible-body">
+      <div style="padding-top:12px;font-size:14px;color:var(--text-muted);line-height:1.7">
+        <p>Drops culture is a well-established marketing model built on manufactured scarcity, FOMO psychology, and community identity. Originating in streetwear (Supreme, Nike), it has expanded into luxury (Herm&egrave;s allocation), watches (MoonSwatch), food (Last Crumb), and beverages (Liquid Death).</p>
+        <p style="margin-top:8px">For jewelry specifically, drops are underexplored but naturally aligned. 31% of consumers are more likely to purchase items labeled "limited-edition," and 39% of Gen Z prefer limited editions. Indie jewelers like Hilary Finck and Tears and Dears are proving drops work at small scale, with opal drops achieving 16.3% email click-through rates and full inventory sellouts within days.</p>
+        <p style="margin-top:8px"><strong>Key insight:</strong> Drops don't require a massive audience or budget. They require consistency, anticipation-building, and pricing discipline.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-16">
+    <div class="collapsible" onclick="toggleCollapsible(this)">
+      <span class="exp-arrow">&#9654;</span>
+      <h3 style="margin:0;font-size:16px">Competitive Analysis &mdash; Executive Summary</h3>
+    </div>
+    <div class="collapsible-body">
+      <div style="padding-top:12px;font-size:14px;color:var(--text-muted);line-height:1.7">
+        <p>After profiling 8 Tier 1 drops operators and 6 Tier 2 jewelry/luxury brands, the key finding is clear: <strong>no jewelry brand is running true drops.</strong> Limited editions exist. "Sold out" language exists. But the full drops playbook &mdash; regular cadence, countdown hype, FCFS mechanics, community identity, sold-out culture &mdash; is completely absent from the jewelry category.</p>
+        <p style="margin-top:8px">This is both a gap and a validation risk. The gap means a brand could be a genuine first-mover. The risk means there's no proof-of-concept for jewelry drops at this scale.</p>
+        <p style="margin-top:8px"><strong>Top 3 transferable models:</strong> (1) MSCHF's numbered sequential drops, (2) Corteiz's guerrilla zero-budget hype, (3) MoonSwatch cadence model.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:16px;margin-bottom:12px">Research Priorities</h3>
+    <ul style="padding-left:20px;font-size:14px;color:var(--text-muted)">
+      <li>How do drops mechanics translate to jewelry/luxury?</li>
+      <li>What hype and community-building tactics work for higher price points?</li>
+      <li>Which drops models (raffle, FCFS, numbered editions) fit jewelry best?</li>
+      <li>How do luxury buyers respond to scarcity tactics vs. streetwear buyers?</li>
+    </ul>
+    <p style="margin-top:12px;font-size:13px;color:var(--red)"><strong>Kill Criteria:</strong> If drops mechanics consistently alienate luxury buyers or damage brand perception.</p>
+  </div>
+</div>
+
+<!-- ============ SOCIAL ============ -->
+<div id="social" class="tab-panel">
+  <h2 class="section-title">Social <span class="accent">Channel Analysis</span></h2>
+
+  <h3 class="mb-8">Channels Overview</h3>
+  <div class="filter-bar" id="channel-filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="Drops broad">Drops Broad</button>
+    <button class="filter-btn" data-filter="Jewelry specific">Jewelry Specific</button>
+    <button class="filter-btn" data-filter="Both">Both</button>
+  </div>
+  <div style="overflow-x:auto">
+  <table class="data-table" id="channel-table">
+    <thead>
+      <tr>
+        <th>Channel</th><th>Communities / Sources</th><th>Layer</th><th>Activity</th><th>Key Value</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  </div>
+
+  <h2 class="section-title mt-24">Hype <span class="accent">Mechanics</span></h2>
+  <div id="hype-mechanics"></div>
+
+  <h2 class="section-title mt-24">Community <span class="accent">Dynamics</span></h2>
+  <div id="community-dynamics"></div>
+
+  <h2 class="section-title mt-24">Scarcity <span class="accent">Sentiment</span></h2>
+  <div class="card mb-24">
+    <div class="sentiment-row"><span class="dot dot-pos"></span><span class="sentiment-pos"><strong>Positive:</strong></span> Sellouts validate brand heat. "Sold out in 30 seconds" is a badge of pride. Creates social media content.</div>
+    <div class="sentiment-row"><span class="dot dot-neg"></span><span class="sentiment-neg"><strong>Negative:</strong></span> Bot interference (14:1 bot-to-human ratios) causes the most backlash. Honest sellouts are accepted as part of the game.</div>
+    <div class="sentiment-row"><span class="dot dot-pos"></span><span class="sentiment-pos"><strong>Net Effect:</strong></span> Sellouts generally <em>increase</em> desire for the next drop. Missing out creates motivation to be faster next time.</div>
+    <div class="sentiment-row"><span class="dot dot-neg"></span><span class="sentiment-neg"><strong>Fine Line:</strong></span> Scarcity becomes alienating when it feels manufactured or when consumers have no real chance of buying.</div>
+    <p class="text-muted text-sm" style="margin-top:12px"><strong>Secondary Market Signal:</strong> In 2020, 58% of releases traded above retail on StockX; by 2024, that dropped to 47%. Nike cut limited Jordan production by 35% to restore exclusivity.</p>
+  </div>
+
+  <h2 class="section-title">Consumer <span class="accent">Segments</span></h2>
+  <div class="card-grid" id="segments-grid">
+    <div class="card segment-card">
+      <h4>Hypebeasts / Collectors</h4>
+      <ul>
+        <li><strong>Motivations:</strong> Status, resale value, completing collections, social media flexing</li>
+        <li><strong>Channels:</strong> Twitter/X, Discord, Instagram, StockX</li>
+        <li><strong>Values:</strong> Speed, information advantage, early access</li>
+      </ul>
+    </div>
+    <div class="card segment-card">
+      <h4>Casual Drop Shoppers</h4>
+      <ul>
+        <li><strong>Motivations:</strong> Getting something special, cultural moment, gift-giving</li>
+        <li><strong>Channels:</strong> Instagram, TikTok, email newsletters</li>
+        <li><strong>Values:</strong> Fairness, clear information, easy checkout, beautiful product</li>
+      </ul>
+    </div>
+    <div class="card segment-card">
+      <h4>Luxury Buyers</h4>
+      <ul>
+        <li><strong>Motivations:</strong> Quality, craftsmanship, personal expression, investment value</li>
+        <li><strong>Channels:</strong> Brand websites, email, word of mouth, PurseForum/Watchuseek</li>
+        <li><strong>Values:</strong> Relationship with the brand, provenance, materials quality</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMPETITIVE ============ -->
+<div id="competitive" class="tab-panel">
+  <h2 class="section-title">Competitive <span class="accent">Landscape</span></h2>
+  <input class="search-box" id="comp-search" type="text" placeholder="Search operators by name...">
+  <div class="filter-bar" id="comp-filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="tier1">Tier 1</button>
+    <button class="filter-btn" data-filter="tier2">Tier 2</button>
+  </div>
+  <div id="comp-list"></div>
+</div>
+
+<!-- ============ OPPORTUNITIES ============ -->
+<div id="opportunities" class="tab-panel">
+  <h2 class="section-title">Transferability <span class="accent">Matrix</span></h2>
+  <div class="filter-bar" id="priority-filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="HIGH">HIGH</button>
+    <button class="filter-btn" data-filter="MEDIUM">MEDIUM</button>
+    <button class="filter-btn" data-filter="LATER">LATER</button>
+    <button class="filter-btn" data-filter="NO">NO</button>
+  </div>
+  <div style="overflow-x:auto">
+  <table class="data-table" id="matrix-table">
+    <thead>
+      <tr>
+        <th data-sort="tactic">Tactic <span class="sort-arrow"></span></th>
+        <th data-sort="origin">Origin <span class="sort-arrow"></span></th>
+        <th data-sort="scale">Scale? <span class="sort-arrow"></span></th>
+        <th data-sort="cash">Cash <span class="sort-arrow"></span></th>
+        <th data-sort="time">Time <span class="sort-arrow"></span></th>
+        <th data-sort="priority">Priority <span class="sort-arrow"></span></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  </div>
+
+  <h2 class="section-title mt-24">Gap <span class="accent">Analysis</span></h2>
+  <p class="section-desc">Drops tactics NOT yet applied to jewelry:</p>
+  <div id="gap-list"></div>
+
+  <h2 class="section-title mt-24">Anti-Patterns <span class="accent">& Red Flags</span></h2>
+  <div id="antipattern-list"></div>
+</div>
+
+<!-- ============ QUOTES ============ -->
+<div id="quotes" class="tab-panel">
+  <h2 class="section-title">Notable <span class="accent">Quotes</span></h2>
+  <p class="section-desc">Click any quote to copy it to your clipboard.</p>
+  <div class="filter-bar" id="quote-filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="Hype & Anticipation">Hype &amp; Anticipation</button>
+    <button class="filter-btn" data-filter="Scarcity & FOMO">Scarcity &amp; FOMO</button>
+    <button class="filter-btn" data-filter="Community & Identity">Community &amp; Identity</button>
+    <button class="filter-btn" data-filter="Jewelry Specific">Jewelry Specific</button>
+  </div>
+  <div id="quotes-list"></div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const channels = [
+  {channel:"Reddit",communities:"r/streetwear, r/sneakers, r/supremeclothing, r/MSCHF",layer:"Drops broad",activity:"High",value:"Consumer sentiment, fairness complaints, FOMO language"},
+  {channel:"Reddit",communities:"r/jewelry, r/watches",layer:"Jewelry specific",activity:"Medium",value:"Limited edition reactions, collector psychology"},
+  {channel:"Instagram",communities:"Brand accounts, unboxing content, countdown features",layer:"Both",activity:"High",value:"Hype mechanics, teaser tactics, engagement patterns"},
+  {channel:"TikTok",communities:"Haul videos, \"how to cop\" guides, drop reactions",layer:"Drops broad",activity:"High",value:"Content format discovery, viral mechanics"},
+  {channel:"Twitter/X",communities:"@DropsByJay, @dropsdotgg, brand accounts",layer:"Drops broad",activity:"High",value:"Real-time drop reactions, information ecosystem"},
+  {channel:"Discord",communities:"Sneaker cook groups, drop notification servers",layer:"Drops broad",activity:"High",value:"Community infrastructure, paid membership models"},
+  {channel:"Secondary Markets",communities:"StockX, GOAT, Grailed",layer:"Drops broad",activity:"High",value:"Price signals, demand validation"},
+  {channel:"Jewelry Blogs",communities:"Joy Joya, BoF, indie jeweler case studies",layer:"Jewelry specific",activity:"Medium",value:"Jewelry-specific drop tactics and results"}
+];
+
+const hypeMechanics = [
+  {name:"Countdown Teasers",desc:"Brands share cryptic previews, then gradually reveal more detail as the drop approaches. The sequence is \"tease \u2192 reveal \u2192 sustain.\" Countdown stickers and reminder features on Instagram ensure audiences are ready to buy.",who:"Corteiz (cryptic coordinate clues, last-minute location reveals), Supreme (SupremeCommunity droplists every Wednesday), MSCHF (numbered sequential drops)",impact:"Posts tease designs, countdowns heighten excitement, and unboxings go viral. Brands that let fans guess what's coming transform passive followers into active participants."},
+  {name:"Scheduled Regularity",desc:"Supreme drops every Thursday at 11am EST. Consumers know the rhythm and build it into their week. The predictability creates a habit loop.",who:"Supreme (Thursday weekly), MoonSwatch (full moon drops), Palace (Friday drops). Even irregular droppers like Corteiz maintain a recognizable pattern.",impact:"SupremeCommunity and @DropsByJay exist solely to track drop schedules \u2014 the regularity created an entire information ecosystem."},
+  {name:"Live Drops",desc:"Live shopping is one of the most powerful ways to drop a product \u2014 building hype, answering questions, and creating FOMO in real time. The \"going, going, gone\" dynamic mirrors auction energy.",who:"Instagram Live drops, TikTok Shop live selling. Smaller brands are using this effectively because it doesn't require a massive tech stack.",impact:"Combines maker story with real-time urgency. Strong fit for handmade / artisan brands."},
+  {name:"Influencer / Creator Seeding",desc:"Brands send products to influencers before the public drop, creating \"early access\" content that builds anticipation.",who:"Gymshark's Onyx Midnight drops used loyalty-gated access with creator seeding.",impact:"Creates pre-drop content wave that builds awareness organically."}
+];
+
+const communityDynamics = [
+  {name:"In-Group Identity",desc:"Drops create a sense of membership. Successfully \"copping\" a drop is a shared experience. On Reddit, \"copped\" posts celebrate wins; \"L\" posts commiserate losses.",evidence:"Discord cook groups charge $10\u2013$299/month for membership. People pay for the community of drop participation, not just the products.",implication:"Could build an \"inner circle\" of collectors \u2014 email list subscribers who get first access."},
+  {name:"Between-Drop Engagement",desc:"The best drops brands don't go silent between releases. They share process, tease what's next, and engage community.",evidence:"Corteiz maintains cultural conversation through provocative social media even when nothing is dropping.",implication:"Behind-the-scenes videos of the making process become hype-building for the next drop, not just brand awareness."},
+  {name:"Loyalty vs. One-Time Participation",desc:"Brands that treat every customer as disposable (pure FCFS with no recognition of loyal buyers) eventually lose to fatigue.",evidence:"Mejuri's Mejuri+ membership gives early access and exclusive products, building retention.",implication:"At $250\u2013$1K price points, repeat buyers are possible and valuable. An email list with early access privileges costs nothing to implement."}
+];
+
+const tier1 = [
+  {name:"Supreme",model:"Weekly Thursday drops of new product across seasonal collections. The original drops brand.",mechanics:"FCFS online + in-store. Drops every Thursday at 11am EST. No raffles \u2014 pure speed.",cadence:"Weekly during two seasons/year (~19 weeks/season).",price:"$30\u2013$300 for most items. Accessible enough for impulse buys.",works:"Consistency. 20+ years of Thursday drops trained an entire generation. Community-as-marketing-engine.",doesntTransfer:"Scale (millions of followers, global stores). Low price points enable impulse buying that doesn't work at $500+.",tactics:["Fixed day/time schedule","Let the community market for you","Seasonal collections with weekly reveals"]},
+  {name:"MSCHF",model:"Sequential numbered \"drops\" (125+) spanning art, products, digital experiences, and cultural provocations.",mechanics:"Each drop is unique \u2014 FCFS, physical installations, digital experiences.",cadence:"Roughly biweekly, numbered sequentially.",price:"$0 to $10,000+. Unpredictability is part of the appeal.",works:"Numbered system creates narrative. Each drop is an event. Creative provocation generates organic media.",doesntTransfer:"Requires constant creative innovation and cultural moment-making.",tactics:["Number the drops","Make each drop unique","Build a creative narrative: \"what will they make next?\""]},
+  {name:"Telfar",model:"Democratized luxury. The \"Bushwick Birkin.\" Inverted scarcity.",mechanics:"Bag Security Program (BSP) \u2014 24-hour unlimited pre-order windows.",cadence:"Periodic BSP windows + surprise color drops.",price:"$150\u2013$257. Deliberately accessible.",works:"Proved you can build luxury cachet through accessibility, not just exclusivity.",doesntTransfer:"Brand built on cultural identity politics not easily replicable.",tactics:["\"Belonging, not differentiation\" ethos","Pre-order for custom pieces"]},
+  {name:"Corteiz",model:"Guerrilla streetwear with zero traditional marketing. Password-protected website, surprise drops.",mechanics:"Password-protected website \u2014 you need a code shared via social media or hidden clues. One-day-only events.",cadence:"Irregular and unpredictable. Surprise is the mechanic.",price:"Standard streetwear pricing ($50\u2013$200).",works:"Zero marketing spend. Everything is organic. The difficulty of buying IS the marketing.",doesntTransfer:"Requires constant social media presence and cultural fluency.",tactics:["Email-list-only access (password equivalent)","Cryptic teasers","Zero-budget hype"]},
+  {name:"Palace",model:"London-based skatewear with Friday drops and irreverent British humor.",mechanics:"FCFS online + London flagship. Friday drops.",cadence:"Weekly during seasonal drops.",price:"Standard streetwear pricing.",works:"Consistent cadence + distinctive brand voice.",doesntTransfer:"Skatewear culture-specific brand voice.",tactics:["Brand voice matters \u2014 be authentic to your culture"]},
+  {name:"Nike SNKRS",model:"App-based raffle system for limited sneaker releases.",mechanics:"SNKRS app raffle with engagement rewards.",cadence:"Multiple drops per week.",price:"$100\u2013$250 retail.",works:"Engagement rewards for active community members.",doesntTransfer:"Requires app infrastructure not justifiable at small scale.",tactics:["Engagement rewards (rewarding active community members)"]},
+  {name:"WHYN",model:"Raffle-based luxury drops. \u00a320+ tickets for items valued at \u00a310,000+.",mechanics:"Raffle with skill-based questions. Max 50 tickets per person.",cadence:"Periodic single-item drops.",price:"\u00a320+ tickets, items \u00a310K+. One item per drop \u2014 the ultimate scarcity.",works:"Countdown timers, \"Whynners\" showcases, \"Room 99\" gamification.",doesntTransfer:"Legal complexity. Revenue model is fundamentally different.",tactics:["Showcasing past buyers","Countdown timers","One-item-per-drop narrative"]},
+  {name:"Jacquemus",model:"Luxury fashion with viral social media presence and limited capsule drops.",mechanics:"Online drops + pop-ups in unexpected locations (vending machines, swimming pool stores).",cadence:"Seasonal capsules + surprise pop-ups.",price:"Luxury fashion pricing.",works:"Founder-as-brand. The designer\u2019s personal Instagram (6M+ followers) IS the brand\u2019s marketing. Costs nothing beyond time.",doesntTransfer:"Requires founder with massive personal following.",tactics:["Founder-as-brand","Unexpected formats"]}
+];
+
+const tier2 = [
+  {name:"MoonSwatch",subtitle:"Swatch x Omega",approach:"Physical-first drops at select boutiques. Full moon cadence. One-day-only availability.",execution:"Global queues, 1\u20132 per customer, resale premiums hit 3x retail ($260 \u2192 $780+).",relevant:"Closest price-point analogue. $260 watch created Supreme-level queue culture. Proves drops work in the $200\u2013$500 tier."},
+  {name:"Herm\u00e8s",subtitle:"",approach:"Allocation model. Access must be earned through purchase history.",execution:"You can't just buy a Birkin; you must build a purchase history and be offered one.",relevant:"The principle that access to special pieces can be earned. Lightweight version: email subscribers first, past buyers get first pick."},
+  {name:"Mejuri",subtitle:"",approach:"Mejuri+ membership for early access to drops and exclusive products.",execution:"Running seasonal sales alongside drops, which dilutes the scarcity message.",relevant:"Membership-gated access works for accessible jewelry. But simultaneous discounting (up to 25% off) undermines the scarcity message. Don't mix drops and sales."},
+  {name:"Missoma",subtitle:"",approach:"Collaboration drops with high-profile partners (Harris Reed, Lucy Williams).",execution:"Limited-run collaboration collections create buzz.",relevant:"Collaboration as a drops mechanic. Partner with local artists/musicians/designers for special drops."},
+  {name:"Hilary Finck",subtitle:"Jewelry",approach:"True indie jewelry drops. Opal orb collections in limited quantities via email.",execution:"16.3% click-through rate. All charm inventory sold out within days.",relevant:"Closest existing model. Small audience, handmade product, email-driven drops, real sellouts. Proves the concept at indie scale."},
+  {name:"Tears and Dears",subtitle:"",approach:"Weekly drops on Etsy. Fans \"avidly refresh\" the page awaiting each week's drop.",execution:"Signature Spiked Hearts and colorful rings in weekly cadence.",relevant:"Proves weekly drop cadence works for a tiny artisan brand. The \"refresh\" behavior IS the drops mechanic working."}
+];
+
+const matrix = [
+  {tactic:"Number drops sequentially (#1, #2...)",origin:"MSCHF",scale:"Yes",cash:"$0",time:"Low",priority:"HIGH"},
+  {tactic:"Fixed drop schedule (e.g., First Friday)",origin:"Supreme",scale:"Yes",cash:"$0",time:"Medium",priority:"HIGH"},
+  {tactic:"Email-only access (password equivalent)",origin:"Corteiz",scale:"Yes",cash:"$0",time:"Low",priority:"HIGH"},
+  {tactic:"Video teasers of making process",origin:"Jacquemus / Corteiz",scale:"Yes",cash:"$0",time:"Medium",priority:"HIGH"},
+  {tactic:"Live video drops",origin:"Emerging trend",scale:"Yes",cash:"$0",time:"Medium",priority:"HIGH"},
+  {tactic:"Countdown timers on site",origin:"Multiple",scale:"Yes",cash:"$0 (Shopify native)",time:"Low",priority:"MEDIUM"},
+  {tactic:"Showcasing past buyers",origin:"WHYN / Telfar",scale:"Yes",cash:"$0",time:"Low",priority:"MEDIUM"},
+  {tactic:"Founder-as-brand content",origin:"Jacquemus",scale:"Yes",cash:"$0",time:"Medium",priority:"MEDIUM"},
+  {tactic:"Local pop-up drops",origin:"Corteiz / MoonSwatch",scale:"Yes",cash:"Low ($200\u2013$500)",time:"High",priority:"MEDIUM"},
+  {tactic:"Collaboration drops",origin:"Missoma",scale:"Yes",cash:"Low\u2013Medium",time:"High",priority:"LATER"},
+  {tactic:"Membership / early access tier",origin:"Mejuri",scale:"Yes",cash:"$0",time:"Low",priority:"LATER"},
+  {tactic:"Raffle for hero pieces",origin:"WHYN",scale:"Maybe",cash:"$0",time:"Medium (legal)",priority:"LATER"},
+  {tactic:"App-based drops",origin:"Nike SNKRS",scale:"No",cash:"High ($10K+)",time:"High",priority:"NO"}
+];
+
+const gaps = [
+  {title:"Numbered sequential drops",desc:"No jeweler is numbering their releases like MSCHF."},
+  {title:"Live creation drops",desc:"No drops brand shows the product being made live."},
+  {title:"Password/access-gated drops",desc:"Standard in streetwear (Corteiz), absent in jewelry."},
+  {title:"Drop cadence culture",desc:"No jewelry brand has trained its audience to show up at a specific time regularly."},
+  {title:"Community-as-marketing",desc:"In streetwear, the community does the marketing. No jewelry brand has this."},
+  {title:"Cross-category provocation",desc:"MSCHF's strength is doing unexpected things across categories. No jeweler tries this."}
+];
+
+const antiPatterns = [
+  {title:"Discounting alongside drops",desc:"Trains customers to wait. Destroys scarcity narrative. Mejuri runs sales alongside drops \u2014 mixed messaging."},
+  {title:"Over-frequency",desc:"Exhausts both production and audience at small scale. Supreme can do weekly; handmade brands cannot."},
+  {title:"Investing in app/tech infrastructure",desc:"Volume doesn't justify custom tech. Nike SNKRS cost millions. Shopify handles everything needed."},
+  {title:"Manufacturing scarcity dishonestly",desc:"If scarcity is real, never undermine it. Fast-fashion brands caught relabeling standard inventory as \"limited.\""},
+  {title:"Spending cash on marketing",desc:"Time-intensive organic tactics beat paid acquisition at early stage. Many small brands burn cash on Meta ads instead of building community."},
+  {title:"\"Limited collection\" language without actual limits",desc:"Pieces remain available indefinitely, training customers that \"limited\" means nothing."},
+  {title:"Deep discounting (75% off sales)",desc:"Actively undermines scarcity positioning and teaches customers to never pay full price."}
+];
+
+const quotes = [
+  {text:"Brands share sneak peeks of packaging, sketches, or influencer reactions, set up countdowns, and release new teasers at scheduled times to build momentum.",source:"Shopify 2026 Drops Guide",category:"Hype & Anticipation"},
+  {text:"31% of consumers across 17 international markets say they\u2019re more likely to buy items labeled \u2018limited-edition.\u2019",source:"YouGov 2024 Survey",category:"Scarcity & FOMO"},
+  {text:"39% of Gen Z prefer limited editions \u2014 the highest response among age groups.",source:"Shopify consumer data",category:"Scarcity & FOMO"},
+  {text:"Telfar introduced a new status symbol that is not based on differentiation \u2014 I\u2019m better than you \u2014 but on belonging \u2014 I am like you.",source:"NPR",category:"Community & Identity"},
+  {text:"Limited releases make customers perceive pieces as rare treasures, fostering a dedicated collector base.",source:"Joy Joya",category:"Jewelry Specific"},
+  {text:"Hilary Finck\u2019s opal drop achieved a 16.3% click-through rate, with all charm inventory selling out within days.",source:"Joy Joya case study",category:"Jewelry Specific"},
+  {text:"45% of consumers value drops specifically for access to difficult-to-obtain items.",source:"Consumer survey data",category:"Scarcity & FOMO"},
+  {text:"56% of shoppers say members-only access is a top perk.",source:"Consumer survey data",category:"Community & Identity"},
+  {text:"Not based on differentiation \u2014 I\u2019m better than you \u2014 but on belonging \u2014 I am like you.",source:"Telfar philosophy (NPR)",category:"Community & Identity"}
+];
+
+/* ===== STATE ===== */
+const state = {
+  activeTab: 'overview',
+  channelFilter: 'all',
+  compFilter: 'all',
+  compSearch: '',
+  priorityFilter: 'all',
+  quoteFilter: 'all',
+  matrixSort: {col:null, asc:true}
+};
+
+/* ===== RENDER HELPERS ===== */
+function priorityBadge(p) {
+  const cls = {HIGH:'badge-high',MEDIUM:'badge-medium',LATER:'badge-later',NO:'badge-no'}[p]||'badge-later';
+  return `<span class="badge ${cls}">${p}</span>`;
+}
+
+function tierBadge(t) {
+  return t === 1 ? '<span class="badge badge-tier1">Tier 1</span>' : '<span class="badge badge-tier2">Tier 2</span>';
+}
+
+/* ===== RENDER FUNCTIONS ===== */
+function renderChannels() {
+  const tbody = document.querySelector('#channel-table tbody');
+  const f = state.channelFilter.toLowerCase();
+  const rows = channels.filter(c => f === 'all' || c.layer.toLowerCase() === f);
+  tbody.innerHTML = rows.map(c => `<tr><td><strong>${c.channel}</strong></td><td>${c.communities}</td><td>${c.layer}</td><td>${c.activity}</td><td>${c.value}</td></tr>`).join('');
+}
+
+function renderHypeMechanics() {
+  const el = document.getElementById('hype-mechanics');
+  el.innerHTML = hypeMechanics.map(m => `
+    <div class="card expandable" onclick="toggleExp(this)">
+      <div class="exp-header">
+        <h3>${m.name}</h3>
+        <span class="exp-arrow">&#9654;</span>
+      </div>
+      <div class="exp-body">
+        <div style="padding-top:12px;font-size:14px;color:var(--text-muted);line-height:1.7">
+          <p>${m.desc}</p>
+          <p style="margin-top:8px"><strong>Who does it well:</strong> ${m.who}</p>
+          <p style="margin-top:8px"><strong>Engagement impact:</strong> ${m.impact}</p>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderCommunityDynamics() {
+  const el = document.getElementById('community-dynamics');
+  el.innerHTML = communityDynamics.map(d => `
+    <div class="card expandable" onclick="toggleExp(this)">
+      <div class="exp-header">
+        <h3>${d.name}</h3>
+        <span class="exp-arrow">&#9654;</span>
+      </div>
+      <div class="exp-body">
+        <div style="padding-top:12px;font-size:14px;color:var(--text-muted);line-height:1.7">
+          <p>${d.desc}</p>
+          <p style="margin-top:8px"><strong>Evidence:</strong> ${d.evidence}</p>
+          <p style="margin-top:8px"><strong>Implication for jewelry:</strong> ${d.implication}</p>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderCompetitors() {
+  const el = document.getElementById('comp-list');
+  const search = state.compSearch.toLowerCase();
+  const f = state.compFilter;
+  let html = '';
+
+  if (f === 'all' || f === 'tier1') {
+    const items = tier1.filter(c => !search || c.name.toLowerCase().includes(search));
+    if (items.length) {
+      html += '<h3 class="mb-8" style="color:var(--accent)">Tier 1 \u2014 Best-in-Class Drops Operators</h3>';
+      html += items.map(c => `
+        <div class="card expandable" onclick="toggleExp(this)">
+          <div class="exp-header">
+            <h3>${c.name} ${tierBadge(1)}</h3>
+            <span class="exp-arrow">&#9654;</span>
+          </div>
+          <div class="exp-body">
+            <div style="padding-top:12px;font-size:14px;color:var(--text-muted);line-height:1.7">
+              <p><strong>Model:</strong> ${c.model}</p>
+              <p style="margin-top:6px"><strong>Mechanics:</strong> ${c.mechanics}</p>
+              <p style="margin-top:6px"><strong>Cadence:</strong> ${c.cadence}</p>
+              <p style="margin-top:6px"><strong>Price:</strong> ${c.price}</p>
+              <p style="margin-top:6px"><strong>What works:</strong> ${c.works}</p>
+              ${c.doesntTransfer ? `<p style="margin-top:6px"><strong>What doesn't transfer:</strong> ${c.doesntTransfer}</p>` : ''}
+              <p style="margin-top:10px"><strong>Transferable tactics:</strong></p>
+              <ul style="padding-left:20px;margin-top:4px">${c.tactics.map(t=>`<li>${t}</li>`).join('')}</ul>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  if (f === 'all' || f === 'tier2') {
+    const items = tier2.filter(c => !search || c.name.toLowerCase().includes(search));
+    if (items.length) {
+      html += '<h3 class="mb-8 mt-24" style="color:var(--text-muted)">Tier 2 \u2014 Jewelry / Luxury Scarcity Brands</h3>';
+      html += items.map(c => `
+        <div class="card expandable" onclick="toggleExp(this)">
+          <div class="exp-header">
+            <h3>${c.name}${c.subtitle ? ' <span style="color:var(--text-muted);font-weight:400;font-size:14px">(' + c.subtitle + ')</span>' : ''} ${tierBadge(2)}</h3>
+            <span class="exp-arrow">&#9654;</span>
+          </div>
+          <div class="exp-body">
+            <div style="padding-top:12px;font-size:14px;color:var(--text-muted);line-height:1.7">
+              <p><strong>Scarcity approach:</strong> ${c.approach}</p>
+              <p style="margin-top:6px"><strong>Execution:</strong> ${c.execution}</p>
+              <p style="margin-top:6px"><strong>What's relevant:</strong> ${c.relevant}</p>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  el.innerHTML = html || '<p class="text-muted">No operators match your search.</p>';
+}
+
+function renderMatrix() {
+  const tbody = document.querySelector('#matrix-table tbody');
+  let data = [...matrix];
+  const f = state.priorityFilter;
+  if (f !== 'all') data = data.filter(r => r.priority === f);
+
+  const s = state.matrixSort;
+  if (s.col) {
+    const priorityOrder = {HIGH:0,MEDIUM:1,LATER:2,NO:3};
+    data.sort((a, b) => {
+      let va = a[s.col], vb = b[s.col];
+      if (s.col === 'priority') { va = priorityOrder[va]||99; vb = priorityOrder[vb]||99; }
+      if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      if (va < vb) return s.asc ? -1 : 1;
+      if (va > vb) return s.asc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  tbody.innerHTML = data.map(r => `<tr>
+    <td>${r.tactic}</td><td>${r.origin}</td><td>${r.scale}</td><td>${r.cash}</td><td>${r.time}</td><td>${priorityBadge(r.priority)}</td>
+  </tr>`).join('');
+
+  document.querySelectorAll('#matrix-table th').forEach(th => {
+    const col = th.dataset.sort;
+    const arrow = th.querySelector('.sort-arrow');
+    if (!arrow) return;
+    if (s.col === col) arrow.textContent = s.asc ? '\u25B2' : '\u25BC';
+    else arrow.textContent = '';
+  });
+}
+
+function renderGaps() {
+  document.getElementById('gap-list').innerHTML = gaps.map(g => `
+    <div class="gap-card"><div class="title">${g.title}</div><div class="desc">${g.desc}</div></div>
+  `).join('');
+}
+
+function renderAntiPatterns() {
+  document.getElementById('antipattern-list').innerHTML = antiPatterns.map(a => `
+    <div class="warning-card"><div class="title">${a.title}</div><div class="desc">${a.desc}</div></div>
+  `).join('');
+}
+
+function renderQuotes() {
+  const el = document.getElementById('quotes-list');
+  const f = state.quoteFilter;
+  const data = f === 'all' ? quotes : quotes.filter(q => q.category === f);
+  el.innerHTML = data.map((q, i) => `
+    <div class="quote-card" onclick="copyQuote(this, ${i})" data-idx="${i}">
+      <span class="copy-hint">click to copy</span>
+      <span class="copied-msg">Copied!</span>
+      <blockquote>\u201C${q.text}\u201D</blockquote>
+      <div class="source">\u2014 ${q.source} &nbsp;&middot;&nbsp; <span style="color:var(--accent)">${q.category}</span></div>
+    </div>
+  `).join('');
+}
+
+function updateAll() {
+  renderChannels();
+  renderCompetitors();
+  renderMatrix();
+  renderQuotes();
+}
+
+/* ===== INTERACTIONS ===== */
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tab));
+}
+
+function toggleExp(el) {
+  el.classList.toggle('open');
+}
+
+function toggleCollapsible(el) {
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+  const arrow = el.querySelector('.exp-arrow');
+  if (arrow) {
+    if (body.classList.contains('open')) arrow.style.transform = 'rotate(90deg)';
+    else arrow.style.transform = '';
+  }
+}
+
+function bindFilterBar(barId, stateKey, cb) {
+  document.getElementById(barId).addEventListener('click', e => {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll(`#${barId} .filter-btn`).forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    state[stateKey] = e.target.dataset.filter;
+    cb();
+  });
+}
+
+function copyQuote(card, idx) {
+  const filtered = state.quoteFilter === 'all' ? quotes : quotes.filter(q => q.category === state.quoteFilter);
+  const q = filtered[idx];
+  if (!q) return;
+  const text = `"${q.text}" \u2014 ${q.source}`;
+  navigator.clipboard.writeText(text).then(() => {
+    card.classList.add('just-copied');
+    setTimeout(() => card.classList.remove('just-copied'), 1500);
+  });
+}
+
+/* ===== INIT ===== */
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+bindFilterBar('channel-filters', 'channelFilter', renderChannels);
+bindFilterBar('comp-filters', 'compFilter', renderCompetitors);
+bindFilterBar('priority-filters', 'priorityFilter', renderMatrix);
+bindFilterBar('quote-filters', 'quoteFilter', renderQuotes);
+
+document.getElementById('comp-search').addEventListener('input', e => {
+  state.compSearch = e.target.value;
+  renderCompetitors();
+});
+
+document.querySelectorAll('#matrix-table th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.matrixSort.col === col) state.matrixSort.asc = !state.matrixSort.asc;
+    else { state.matrixSort.col = col; state.matrixSort.asc = true; }
+    renderMatrix();
+  });
+});
+
+/* Initial render */
+renderChannels();
+renderHypeMechanics();
+renderCommunityDynamics();
+renderCompetitors();
+renderMatrix();
+renderGaps();
+renderAntiPatterns();
+renderQuotes();
+</script>
+</body>
+</html>
