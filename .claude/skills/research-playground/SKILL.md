@@ -8,12 +8,21 @@ allowed-tools: Read, Write, Glob, Bash
 
 You are generating an interactive HTML playground that visualizes completed GTM research findings. This is an optional step — run it after `/research-social` and `/research-competitive` have produced their reports.
 
+## Project Selection
+
+Resolve the active project before doing anything:
+
+1. List directories under `projects/`
+2. If the user passed a project name as an argument, use it
+3. If only one project exists, use it
+4. If multiple exist, ask the user which one
+
 ## Context Check
 
 Read these files:
-1. `.claude/research-context.md` — Research context (required)
-2. `reports/social-channel-analysis.md` — Social analysis (required)
-3. `reports/competitive-analysis.md` — Competitive analysis (required)
+1. `projects/<project>/context.md` — Research context (required)
+2. `projects/<project>/reports/social-channel-analysis.md` — Social analysis (required)
+3. `projects/<project>/reports/competitive-analysis.md` — Competitive analysis (required)
 
 If either report is missing, tell the user to run the corresponding skill first.
 
@@ -150,9 +159,9 @@ const state = {
 
 ## After Generating
 
-1. Write the HTML file to `reports/playground.html`
-2. Open it: `open reports/playground.html`
-3. Tell the user: "Playground generated at `reports/playground.html` and opened in your browser. You can also share this file — it's fully self-contained."
+1. Write the HTML file to `projects/<project>/output/playground.html`
+2. Open it: `open projects/<project>/output/playground.html`
+3. Tell the user: "Playground generated at `projects/<project>/output/playground.html` and opened in your browser. You can also share this file — it's fully self-contained."
 
 ## Guidelines
 

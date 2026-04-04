@@ -8,13 +8,22 @@ allowed-tools: Read, Write, WebFetch, WebSearch, AskUserQuestion
 
 You are helping map the competitive landscape of a go-to-market model to identify transferable mechanics and positioning opportunities for the user's category.
 
+## Project Selection
+
+Resolve the active project before doing anything:
+
+1. List directories under `projects/`
+2. If the user passed a project name as an argument, use it
+3. If only one project exists, use it
+4. If multiple exist, ask the user which one
+
 ## Context Check
 
 First, check for:
-1. `.claude/research-context.md` — Research context (required)
-2. `reports/social-channel-analysis.md` — Social analysis (optional, enriches profiles with community perception)
+1. `projects/<project>/context.md` — Research context (required)
+2. `projects/<project>/reports/social-channel-analysis.md` — Social analysis (optional, enriches profiles with community perception)
 
-If research-context.md doesn't exist, ask the user to run `/research-init` first, or gather minimal context directly.
+If context.md doesn't exist, ask the user to run `/research-init` first, or gather minimal context directly.
 
 ## Your Task
 
@@ -86,7 +95,7 @@ Where are the untapped mechanics, the missing applications, the positioning whit
 
 ## Output Format
 
-Create `reports/competitive-analysis.md`:
+Create `projects/<project>/reports/competitive-analysis.md`:
 
 ```
 # Competitive Analysis: [GTM Model] Operators & [Category]

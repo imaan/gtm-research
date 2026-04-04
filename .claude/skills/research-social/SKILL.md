@@ -8,13 +8,22 @@ allowed-tools: Read, Write, WebFetch, WebSearch, AskUserQuestion
 
 You are helping analyze social channels to understand how a go-to-market model works in practice — its mechanics, community dynamics, engagement patterns, and what could transfer to the user's category.
 
+## Project Selection
+
+Resolve the active project before doing anything:
+
+1. List directories under `projects/`
+2. If the user passed a project name as an argument, use it
+3. If only one project exists, use it
+4. If multiple exist, ask the user which one
+
 ## Context Check
 
 First, check for:
-1. `.claude/research-context.md` — Research context (required)
-2. `reports/competitive-analysis.md` — Competitive landscape (optional, enriches analysis)
+1. `projects/<project>/context.md` — Research context (required)
+2. `projects/<project>/reports/competitive-analysis.md` — Competitive landscape (optional, enriches analysis)
 
-If research-context.md doesn't exist, ask the user to run `/research-init` first, or gather minimal context directly.
+If context.md doesn't exist, ask the user to run `/research-init` first, or gather minimal context directly.
 
 ## Your Task
 
@@ -110,7 +119,7 @@ Apply fixed dimensions + model-specific dimensions to each channel.
 
 ## Output Format
 
-Create `reports/social-channel-analysis.md`:
+Create `projects/<project>/reports/social-channel-analysis.md`:
 
 ```
 # Social Channel Analysis: [GTM Model] in [Category]
@@ -199,7 +208,7 @@ Create `reports/social-channel-analysis.md`:
 
 ## Transferability Notes
 
-*Community-lens view of what transfers. For the detailed operator-by-operator transferability matrix, see `reports/competitive-analysis.md`.*
+*Community-lens view of what transfers. For the detailed operator-by-operator transferability matrix, see `projects/<project>/reports/competitive-analysis.md`.*
 
 - [Tactic community says works] — [evidence]
 - [Tactic community says doesn't work] — [evidence]

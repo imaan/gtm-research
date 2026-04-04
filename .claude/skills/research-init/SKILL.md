@@ -76,7 +76,17 @@ After the structured questions, always ask:
 
 ## Output
 
-After gathering answers, create a context file at `.claude/research-context.md` with this structure:
+## Project Selection
+
+Resolve the active project before doing anything:
+
+1. List directories under `projects/`
+2. If the user passed a project name as an argument, use it
+3. If only one project exists, use it
+4. If multiple exist, ask the user which one (or offer to create a new one)
+5. If none exist, ask for a project name and create `projects/<name>/input/`, `projects/<name>/reports/`, `projects/<name>/output/`
+
+After gathering answers, create a context file at `projects/<project>/context.md` with this structure:
 
 ```
 # Research Context: [GTM Model] for [Category/Brand]
